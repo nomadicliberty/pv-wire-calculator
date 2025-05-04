@@ -36,9 +36,9 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static">
-        <Toolbar>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw' }}>
+      <AppBar position="static" sx={{ width: '100vw' }}>
+        <Toolbar sx={{ width: '100vw', maxWidth: '100%', px: 3 }}>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             PV Wire Calculator
           </Typography>
@@ -59,17 +59,19 @@ export default function Layout({ children }: LayoutProps) {
         </Toolbar>
       </AppBar>
 
-      <Stepper activeStep={currentStep} sx={{ p: 3 }}>
-        {steps.map((step) => (
-          <Step key={step.path}>
-            <StepLabel>{step.label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      <Box sx={{ width: '100vw', bgcolor: 'background.paper', boxShadow: 1 }}>
+        <Stepper activeStep={currentStep} sx={{ p: 3, maxWidth: '100vw', overflowX: 'auto' }}>
+          {steps.map((step) => (
+            <Step key={step.path}>
+              <StepLabel>{step.label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      </Box>
 
-      <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', width: '100vw', minHeight: 0, height: '100%' }}>
         {children}
-      </Container>
+      </Box>
     </Box>
   );
 } 

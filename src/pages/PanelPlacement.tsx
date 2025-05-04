@@ -243,314 +243,315 @@ export default function PanelPlacement() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h4">
-            Panel Placement
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={handleInfoOpen}
-            sx={{ color: 'text.secondary' }}
-          >
-            <InfoIcon />
-          </IconButton>
-          <Popover
-            open={infoOpen}
-            anchorEl={infoAnchorEl}
-            onClose={handleInfoClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            <Box sx={{ p: 2, maxWidth: 300 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Instructions
+    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', flexGrow: 1, minHeight: 0, height: '100%', position: 'relative' }}>
+      {/* Controls column */}
+      <Box sx={{ width: 520, minWidth: 520, flexShrink: 0, p: 2, bgcolor: 'background.paper', borderRight: 1, borderColor: 'grey.200', overflowY: 'auto', zIndex: 2, position: 'relative' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h4">
+              Panel Placement
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={handleInfoOpen}
+              sx={{ color: 'text.secondary' }}
+            >
+              <InfoIcon />
+            </IconButton>
+            <Popover
+              open={infoOpen}
+              anchorEl={infoAnchorEl}
+              onClose={handleInfoClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              <Box sx={{ p: 2, maxWidth: 300 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Instructions
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {mode === 'place' ? (
+                    <>
+                      1. Enter panel dimensions
+                      <br />
+                      2. Select panel orientation
+                      <br />
+                      3. Click on the grid to place a panel
+                      <br />
+                      4. Switch to "Select Panels" mode to modify panels
+                    </>
+                  ) : (
+                    <>
+                      1. Click on a panel to select it
+                      <br />
+                      2. Use the controls to flip the selected panel
+                      <br />
+                      3. Press Delete or Backspace to remove the selected panel
+                      <br />
+                      4. Switch to "Place Panels" mode to add more panels
+                    </>
+                  )}
+                </Typography>
+              </Box>
+            </Popover>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleLoadProject}
+            >
+              Load Project
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={panels.length === 0}
+            >
+              Next: Combiner Box
+            </Button>
+          </Box>
+        </Box>
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        <Paper sx={{ p: 2, mb: 1 }}>
+          <Stack spacing={1}>
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
+                Mode
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {mode === 'place' ? (
-                  <>
-                    1. Enter panel dimensions
-                    <br />
-                    2. Select panel orientation
-                    <br />
-                    3. Click on the grid to place a panel
-                    <br />
-                    4. Switch to "Select Panels" mode to modify panels
-                  </>
-                ) : (
-                  <>
-                    1. Click on a panel to select it
-                    <br />
-                    2. Use the controls to flip the selected panel
-                    <br />
-                    3. Press Delete or Backspace to remove the selected panel
-                    <br />
-                    4. Switch to "Place Panels" mode to add more panels
-                  </>
-                )}
-              </Typography>
+              <ToggleButtonGroup
+                value={mode}
+                exclusive
+                onChange={(_, newMode) => {
+                  if (newMode !== null) {
+                    setMode(newMode);
+                    setSelectedPanel(null);
+                  }
+                }}
+                fullWidth
+                size="small"
+              >
+                <ToggleButton value="place">
+                  <AddIcon sx={{ mr: 0.5 }} />
+                  Place
+                </ToggleButton>
+                <ToggleButton value="select">
+                  <EditIcon sx={{ mr: 0.5 }} />
+                  Select
+                </ToggleButton>
+              </ToggleButtonGroup>
             </Box>
-          </Popover>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={handleLoadProject}
-          >
-            Load Project
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleNext}
-            disabled={panels.length === 0}
-          >
-            Next: Combiner Box
-          </Button>
-        </Box>
-      </Box>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-        <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
-          <Paper sx={{ p: 2, mb: 1 }}>
-            <Stack spacing={1}>
+
+            {mode === 'place' && (
               <Box>
                 <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
-                  Mode
+                  Panel Dimensions
                 </Typography>
-                <ToggleButtonGroup
-                  value={mode}
-                  exclusive
-                  onChange={(_, newMode) => {
-                    if (newMode !== null) {
-                      setMode(newMode);
-                      setSelectedPanel(null);
-                    }
-                  }}
-                  fullWidth
-                  size="small"
-                >
-                  <ToggleButton value="place">
-                    <AddIcon sx={{ mr: 0.5 }} />
-                    Place
-                  </ToggleButton>
-                  <ToggleButton value="select">
-                    <EditIcon sx={{ mr: 0.5 }} />
-                    Select
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-
-              {mode === 'place' && (
-                <Box>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
-                    Panel Dimensions
-                  </Typography>
-                  <Stack spacing={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label={`Width (${measurementSystem === 'imperial' ? 'inches' : 'mm'})`}
-                      value={panelWidth}
-                      onChange={(e) => {
-                        setPanelWidth(e.target.value);
-                        setError('');
-                      }}
-                      type="number"
-                      inputProps={{ min: 0, step: 0.1 }}
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label={`Length (${measurementSystem === 'imperial' ? 'inches' : 'mm'})`}
-                      value={panelLength}
-                      onChange={(e) => {
-                        setPanelLength(e.target.value);
-                        setError('');
-                      }}
-                      type="number"
-                      inputProps={{ min: 0, step: 0.1 }}
-                    />
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                          Portrait
-                        </Typography>
-                        <Box
-                          sx={{
-                            width: 16,
-                            height: 24,
-                            border: '1px solid',
-                            borderColor: 'text.secondary',
-                            backgroundColor: orientation === 'portrait' ? 'primary.light' : 'transparent',
-                          }}
-                        />
-                      </Box>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            size="small"
-                            checked={orientation === 'landscape'}
-                            onChange={(e) => {
-                              setOrientation(e.target.checked ? 'landscape' : 'portrait');
-                              setError('');
-                            }}
-                          />
-                        }
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Typography variant="body2" sx={{ mr: 1 }}>
-                              Landscape
-                            </Typography>
-                            <Box
-                              sx={{
-                                width: 24,
-                                height: 16,
-                                border: '1px solid',
-                                borderColor: 'text.secondary',
-                                backgroundColor: orientation === 'landscape' ? 'primary.light' : 'transparent',
-                              }}
-                            />
-                          </Box>
-                        }
+                <Stack spacing={1}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label={`Width (${measurementSystem === 'imperial' ? 'inches' : 'mm'})`}
+                    value={panelWidth}
+                    onChange={(e) => {
+                      setPanelWidth(e.target.value);
+                      setError('');
+                    }}
+                    type="number"
+                    inputProps={{ min: 0, step: 0.1 }}
+                  />
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label={`Length (${measurementSystem === 'imperial' ? 'inches' : 'mm'})`}
+                    value={panelLength}
+                    onChange={(e) => {
+                      setPanelLength(e.target.value);
+                      setError('');
+                    }}
+                    type="number"
+                    inputProps={{ min: 0, step: 0.1 }}
+                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                        Portrait
+                      </Typography>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 24,
+                          border: '1px solid',
+                          borderColor: 'text.secondary',
+                          backgroundColor: orientation === 'portrait' ? 'primary.light' : 'transparent',
+                        }}
                       />
                     </Box>
                     <FormControlLabel
                       control={
                         <Switch
                           size="small"
-                          checked={measurementSystem === 'metric'}
+                          checked={orientation === 'landscape'}
                           onChange={(e) => {
-                            setMeasurementSystem(e.target.checked ? 'metric' : 'imperial');
+                            setOrientation(e.target.checked ? 'landscape' : 'portrait');
                             setError('');
                           }}
                         />
                       }
                       label={
-                        <Typography variant="body2">
-                          Use Metric
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ mr: 1 }}>
+                            Landscape
+                          </Typography>
+                          <Box
+                            sx={{
+                              width: 24,
+                              height: 16,
+                              border: '1px solid',
+                              borderColor: 'text.secondary',
+                              backgroundColor: orientation === 'landscape' ? 'primary.light' : 'transparent',
+                            }}
+                          />
+                        </Box>
                       }
                     />
-                  </Stack>
-                </Box>
-              )}
-
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
-                  Spacing
-                </Typography>
-                <Stack spacing={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label={`Row (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
-                    value={rowSpacing}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setRowSpacing(value);
-                    }}
-                    type="number"
-                    inputProps={{ min: 0, step: 0.1 }}
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label={`Panel (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
-                    value={panelSpacing}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setPanelSpacing(value);
-                    }}
-                    type="number"
-                    inputProps={{ min: 0, step: 0.1 }}
+                  </Box>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={measurementSystem === 'metric'}
+                        onChange={(e) => {
+                          setMeasurementSystem(e.target.checked ? 'metric' : 'imperial');
+                          setError('');
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2">
+                        Use Metric
+                      </Typography>
+                    }
                   />
                 </Stack>
               </Box>
+            )}
 
-              <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
-                  Panel Controls
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
+                Spacing
+              </Typography>
+              <Stack spacing={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`Row (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
+                  value={rowSpacing}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setRowSpacing(value);
+                  }}
+                  type="number"
+                  inputProps={{ min: 0, step: 0.1 }}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`Panel (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
+                  value={panelSpacing}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPanelSpacing(value);
+                  }}
+                  type="number"
+                  inputProps={{ min: 0, step: 0.1 }}
+                />
+              </Stack>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5 }}>
+                Panel Controls
+              </Typography>
+              <Stack spacing={1}>
+                <Typography variant="body2" color="text.secondary">
+                  {'Click the button to rotate the panel 180°'}
                 </Typography>
-                <Stack spacing={1}>
-                  <Typography variant="body2" color="text.secondary">
-                    {'Click the button to rotate the panel 180°'}
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <IconButton 
-                      onClick={handleFlip} 
-                      title="Flip Polarity"
-                      disabled={mode === 'select' && !selectedPanel}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: 40,
-                        height: 60,
-                        border: '1px solid',
-                        borderRadius: '4px',
-                        borderColor: 'text.secondary',
-                        backgroundColor: isPolarityFlipped ? 'action.selected' : 'transparent',
-                        '&:hover': {
-                          backgroundColor: isPolarityFlipped ? 'action.selected' : 'action.hover',
-                        },
-                        px: 1,
-                        py: 1
-                      }}
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        {polarity.left}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {polarity.right}
-                      </Typography>
-                    </IconButton>
-                  </Stack>
-                  {selectedPanel && mode === 'select' && (
+                <Stack direction="row" spacing={1}>
+                  <IconButton 
+                    onClick={handleFlip} 
+                    title="Flip Polarity"
+                    disabled={mode === 'select' && !selectedPanel}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: 40,
+                      height: 60,
+                      border: '1px solid',
+                      borderRadius: '4px',
+                      borderColor: 'text.secondary',
+                      backgroundColor: isPolarityFlipped ? 'action.selected' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: isPolarityFlipped ? 'action.selected' : 'action.hover',
+                      },
+                      px: 1,
+                      py: 1
+                    }}
+                  >
                     <Typography variant="body2" color="text.secondary">
-                      Press Delete/Backspace to remove
+                      {polarity.left}
                     </Typography>
-                  )}
+                    <Typography variant="body2" color="text.secondary">
+                      {polarity.right}
+                    </Typography>
+                  </IconButton>
                 </Stack>
-              </Box>
-            </Stack>
-          </Paper>
-        </Box>
-
-        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+                {selectedPanel && mode === 'select' && (
+                  <Typography variant="body2" color="text.secondary">
+                    Press Delete/Backspace to remove
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
+          </Stack>
+        </Paper>
+      </Box>
+      {/* Grid column */}
+      <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0, p: 0, position: 'relative', zIndex: 1 }}>
+        <Paper sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', m: 0, p: 0, height: '100%', width: '100%', boxShadow: 'none', borderRadius: 0, bgcolor: 'background.default', overflow: 'hidden' }}>
+          <Box sx={{ width: '100%', px: 3, pt: 2, pb: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
               Not drawn to scale
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
               Note: Each grid cell represents 12" spacing. When panels or rows are placed with gaps, the calculator will add the appropriate spacing for wire length calculations.
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
-              <GridComponent 
-                orientation={orientation}
-                showPreview={true}
-                showCombinerBoxes={false}
-                onPanelPlace={handleGridClick}
-                placementMode={mode === 'place' && panelWidth !== '' && panelLength !== ''}
-                isPolarityFlipped={isPolarityFlipped}
-                onPanelSelect={panel => setSelectedPanel(panel.id)}
-                selectedPanels={selectedPanel ? new Set([selectedPanel]) : new Set()}
-              />
-            </Box>
-          </Paper>
-        </Box>
+          </Box>
+          <Box sx={{ flexGrow: 1, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 0, minWidth: 0, p: 0, overflow: 'hidden' }}>
+            <GridComponent 
+              orientation={orientation}
+              showPreview={true}
+              showCombinerBoxes={false}
+              onPanelPlace={handleGridClick}
+              placementMode={mode === 'place' && panelWidth !== '' && panelLength !== ''}
+              isPolarityFlipped={isPolarityFlipped}
+              onPanelSelect={panel => setSelectedPanel(panel.id)}
+              selectedPanels={selectedPanel ? new Set([selectedPanel]) : new Set()}
+            />
+          </Box>
+        </Paper>
       </Box>
     </Box>
   );

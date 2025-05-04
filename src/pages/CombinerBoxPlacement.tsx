@@ -91,7 +91,7 @@ export default function CombinerBoxPlacement() {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, height: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4">
           Combiner Box Placement
@@ -127,7 +127,7 @@ export default function CombinerBoxPlacement() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, flexGrow: 1, minHeight: 0 }}>
         <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Stack spacing={2}>
@@ -149,15 +149,17 @@ export default function CombinerBoxPlacement() {
           </Paper>
         </Box>
 
-        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-              Not drawn to scale
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Note: Each grid cell represents 12" spacing. Combiner boxes will snap to half-grid increments (6").
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
+        <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <Paper sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ width: '100%', px: 3, pt: 2, pb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                Not drawn to scale
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Note: Each grid cell represents 12" spacing. Combiner boxes will snap to half-grid increments (6").
+              </Typography>
+            </Box>
+            <Box sx={{ flexGrow: 1, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
               <GridComponent 
                 orientation="portrait"
                 showPreview={true}

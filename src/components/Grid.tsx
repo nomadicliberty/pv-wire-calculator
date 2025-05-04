@@ -18,6 +18,7 @@ placementMode?: boolean;
 onPanelSelect?: (panel: Panel) => void;
 onCombinerBoxSelect?: (boxId: string) => void;
 selectedPanels?: Set<string>;
+selectedCombinerBox?: string | null;
 panelOutlineColor?: string;
 isPolarityFlipped?: boolean;
 strings?: any[];
@@ -33,6 +34,7 @@ placementMode = false,
 onPanelSelect,
 onCombinerBoxSelect,
 selectedPanels = new Set(),
+selectedCombinerBox = null,
 panelOutlineColor = 'grey.500',
 isPolarityFlipped = false,
 strings: propStrings
@@ -42,8 +44,6 @@ panels,
 selectedPanel,
 setSelectedPanel,
 combinerBoxes,
-selectedCombinerBox,
-setSelectedCombinerBox,
 strings: storeStrings,
 panelWidth,
 panelLength,
@@ -483,8 +483,13 @@ const renderCombinerBox = (box: CombinerBox) => {
         height: box.height * PIXELS_PER_INCH,
         border: '2px solid',
         borderColor: isSelected ? 'primary.main' : 'grey.700',
-        backgroundColor: isSelected ? 'primary.light' : 'rgba(100,100,100,0.1)',
+        backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.1)' : 'rgba(100,100,100,0.1)',
         pointerEvents: 'auto',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: isSelected ? 'primary.main' : 'grey.500',
+          backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.2)' : 'rgba(100,100,100,0.2)',
+        }
       }}
       onClick={e => {
         e.stopPropagation();
@@ -510,31 +515,27 @@ const renderCombinerBox = (box: CombinerBox) => {
 };
 
 return (
-  <Box sx={{ width: '100vw', height: '80vh', m: 0, p: 0 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-      {showCombinerBoxes 
-        ? "Note: Each grid cell represents 12\" spacing. Combiner boxes will snap to half-grid increments (6\")."
-        : "Note: Each grid cell represents 12\" spacing."}
-    </Typography>
+  <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
     <Paper
       ref={gridRef}
       sx={{
         position: 'relative',
-        minWidth: '100vw',
-        minHeight: '80vh',
-        width: '100vw',
-        height: '80vh',
-        backgroundImage: `linear-gradient(to right, #e0e0e0 1px, transparent 1px), linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)`,
+        width: '100%',
+        height: '100%',
+        minHeight: 0,
+        flex: 1,
+        backgroundImage: `
+          linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+          linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
+        `,
         backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
         cursor: 'crosshair',
+        overflow: 'hidden'
       }}
       onClick={handleClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setPreviewPosition(null)}
     >
-      {panels.map(renderPanel)}
-      {showCombinerBoxes && combinerBoxes.map(renderCombinerBox)}
-      {renderPreview()}
       <svg
         width="100%"
         height="100%"
@@ -542,6 +543,9 @@ return (
       >
         {renderWirePaths()}
       </svg>
+      {panels.map(renderPanel)}
+      {showCombinerBoxes && combinerBoxes.map(renderCombinerBox)}
+      {renderPreview()}
     </Paper>
   </Box>
 );

@@ -68,6 +68,7 @@ export default function StringDefinition() {
 
   const handleCombinerBoxSelect = (boxId: string) => {
     console.log('Combiner box selected:', boxId);
+    setSelectedCombinerBox(boxId);
     setCurrentString(prev => ({
       ...prev,
       combinerBoxId: boxId
@@ -80,9 +81,10 @@ export default function StringDefinition() {
       panels: currentString.panels,
       combinerBoxId: currentString.combinerBoxId,
       panelCount: currentString.panels.length,
-      hasCombinerBox: !!currentString.combinerBoxId
+      hasCombinerBox: !!currentString.combinerBoxId,
+      selectedCombinerBox
     });
-  }, [currentString]);
+  }, [currentString, selectedCombinerBox]);
 
   const handleCreateString = () => {
     if (currentString.panels.length < 2) {
@@ -130,7 +132,7 @@ export default function StringDefinition() {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, height: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4">
           String Definition
@@ -166,9 +168,9 @@ export default function StringDefinition() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-        <Box sx={{ width: { xs: '100%', md: '30%' }, flexShrink: 0 }}>
-          <Paper sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, flexGrow: 1, minHeight: 0 }}>
+        <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
+          <Paper sx={{ p: 3, mb: 3 }}>
             <Stack spacing={1}>
               <Typography variant="subtitle1" gutterBottom>
                 Instructions
@@ -247,35 +249,37 @@ export default function StringDefinition() {
           </Paper>
         </Box>
 
-        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 2, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: 'italic' }}>
-              Not drawn to scale
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {isSelectingFirstPanel 
-                ? 'Select the first panel of your string (this will be the positive end)'
-                : 'Select the next panel in your string or click "Create String" to finish'}
-            </Typography>
-            <Box sx={{ mb: 2, display: 'flex', gap: 3, alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box sx={{ 
-                  width: 20, 
-                  height: 0, 
-                  borderTop: '2px dashed #4caf50'
-                }} />
-                <Typography variant="caption">Positive Wire</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box sx={{ 
-                  width: 20, 
-                  height: 0, 
-                  borderTop: '2px dashed #f44336'
-                }} />
-                <Typography variant="caption">Negative Wire</Typography>
+        <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <Paper sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ width: '100%', px: 3, pt: 2, pb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                Not drawn to scale
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isSelectingFirstPanel 
+                  ? 'Select the first panel of your string (this will be the positive end)'
+                  : 'Select the next panel in your string or click "Create String" to finish'}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', mt: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ 
+                    width: 20, 
+                    height: 0, 
+                    borderTop: '2px dashed #4caf50'
+                  }} />
+                  <Typography variant="caption">Positive Wire</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ 
+                    width: 20, 
+                    height: 0, 
+                    borderTop: '2px dashed #f44336'
+                  }} />
+                  <Typography variant="caption">Negative Wire</Typography>
+                </Box>
               </Box>
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
+            <Box sx={{ flexGrow: 1, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
               <GridComponent 
                 orientation="portrait"
                 showPreview={false}
@@ -284,6 +288,7 @@ export default function StringDefinition() {
                 onPanelSelect={handlePanelSelect}
                 onCombinerBoxSelect={handleCombinerBoxSelect}
                 selectedPanels={selectedPanels}
+                selectedCombinerBox={selectedCombinerBox}
                 strings={strings}
               />
             </Box>
