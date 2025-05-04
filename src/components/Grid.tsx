@@ -16,6 +16,8 @@ interface GridProps {
   onPanelSelect?: (panel: Panel) => void;
   onCombinerBoxSelect?: (boxId: string) => void;
   selectedPanels?: Set<string>;
+  panelOutlineColor?: string;
+  isPolarityFlipped?: boolean;
 }
 
 export default function Grid({ 
@@ -27,9 +29,11 @@ export default function Grid({
   placementMode = false,
   onPanelSelect,
   onCombinerBoxSelect,
-  selectedPanels = new Set()
+  selectedPanels = new Set(),
+  panelOutlineColor = 'grey.500',
+  isPolarityFlipped = false
 }: GridProps) {
-  const { panels, selectedPanel, setSelectedPanel, combinerBoxes, selectedCombinerBox, setSelectedCombinerBox } = useProjectStore();
+  const { panels, selectedPanel, setSelectedPanel, combinerBoxes, selectedCombinerBox, setSelectedCombinerBox, strings } = useProjectStore();
   const gridRef = useRef<HTMLDivElement>(null);
   const [previewPosition, setPreviewPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -138,12 +142,17 @@ export default function Grid({
 
       onPanelPlace?.({
         id: crypto.randomUUID(),
+        number: 0, // This will be set by the store
         x: gridX,
         y: gridY,
         orientation,
         rotation: 0,
         width: orientation === 'portrait' ? 2 : 4,
-        length: orientation === 'portrait' ? 4 : 2
+        length: orientation === 'portrait' ? 4 : 2,
+        polarity: {
+          positive: 'left',
+          negative: 'right'
+        }
       });
     } else {
       // For combiner boxes, use half grid increments
@@ -162,8 +171,11 @@ export default function Grid({
 
       onCombinerBoxPlace?.({
         id: crypto.randomUUID(),
+        number: 0, // This will be set by the store
         x: combinerX,
-        y: combinerY
+        y: combinerY,
+        width: 1,
+        height: 1
       });
     }
   };
@@ -172,11 +184,43 @@ export default function Grid({
     const isSelected = selectedPanels.has(panel.id);
     const width = panel.orientation === 'landscape' ? 4 : 2;
     const height = panel.orientation === 'landscape' ? 2 : 4;
-    const isFlipped = panel.rotation === 180;
+
+    // Find if this panel is part of a string
+    const string = strings.find(s => s.panels.includes(panel.id));
+    const stringIndex = string ? strings.indexOf(string) : -1;
 
     // Calculate center position for rotation
     const centerX = panel.x * CELL_SIZE + (width * CELL_SIZE) / 2;
     const centerY = panel.y * CELL_SIZE + (height * CELL_SIZE) / 2;
+
+    // Define colors for different string states
+    const getPanelColor = () => {
+      if (isSelected) return 'primary.main';
+      if (stringIndex >= 0) {
+        // Use different colors for different strings
+        const colors = ['success.main', 'warning.main', 'error.main', 'info.main'];
+        return colors[stringIndex % colors.length];
+      }
+      return panelOutlineColor;
+    };
+
+    // Get polarity symbol positions based on panel's polarity
+    const getPolaritySymbols = () => {
+      const { positive, negative } = panel.polarity;
+      const symbols: { [key: string]: { x: number; y: number; symbol: string } } = {
+        left: { x: 0.1, y: 0.5, symbol: positive === 'left' ? '+' : '-' },
+        right: { x: 0.9, y: 0.5, symbol: positive === 'right' ? '+' : '-' },
+        top: { x: 0.5, y: 0.1, symbol: positive === 'top' ? '+' : '-' },
+        bottom: { x: 0.5, y: 0.9, symbol: positive === 'bottom' ? '+' : '-' }
+      };
+
+      return [
+        symbols[positive],
+        symbols[negative]
+      ];
+    };
+
+    const polaritySymbols = getPolaritySymbols();
 
     return (
       <Box
@@ -188,13 +232,9 @@ export default function Grid({
           width: width * CELL_SIZE,
           height: height * CELL_SIZE,
           border: '2px solid',
-          borderColor: isSelected ? 'primary.main' : 'grey.500',
+          borderColor: getPanelColor(),
           backgroundColor: isSelected ? 'primary.light' : 'grey.200',
           cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 4px',
           transform: `translate(-50%, -50%) rotate(${panel.rotation}deg)`,
           transformOrigin: 'center center',
           '&:hover': {
@@ -206,13 +246,104 @@ export default function Grid({
           onPanelSelect?.(panel);
         }}
       >
-        <Typography variant="h6" color="text.secondary">
-          {isFlipped ? '-' : '+'}
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          {isFlipped ? '+' : '-'}
-        </Typography>
+        {/* Polarity indicators that rotate with the panel */}
+        {polaritySymbols.map((symbol, index) => (
+          <Typography
+            key={index}
+            variant="h6"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              left: `${symbol.x * 100}%`,
+              top: `${symbol.y * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              transformOrigin: 'center center'
+            }}
+          >
+            {symbol.symbol}
+          </Typography>
+        ))}
+
+        {/* Panel number that stays at the visual bottom and is always upright */}
+        {(() => {
+          let numberBoxSx: any = {
+            position: 'absolute',
+            zIndex: 1,
+            pointerEvents: 'none',
+            left: '50%',
+            transform: `translateX(-50%) rotate(${-panel.rotation}deg)`
+          };
+          if (panel.rotation === 0) {
+            numberBoxSx.bottom = '4px';
+          } else if (panel.rotation === 180) {
+            numberBoxSx.top = '4px';
+          } else if (panel.rotation === 90) {
+            numberBoxSx = {
+              position: 'absolute',
+              zIndex: 1,
+              pointerEvents: 'none',
+              right: '4px',
+              top: '50%',
+              left: 'auto',
+              bottom: 'auto',
+              transform: `translateY(-50%) rotate(-90deg)`
+            };
+          } else if (panel.rotation === 270) {
+            numberBoxSx = {
+              position: 'absolute',
+              zIndex: 1,
+              pointerEvents: 'none',
+              left: '4px',
+              top: '50%',
+              right: 'auto',
+              bottom: 'auto',
+              transform: `translateY(-50%) rotate(-270deg)`
+            };
+          }
+          return (
+            <Box sx={numberBoxSx}>
+              <Typography 
+                variant="body2" 
+                color="text.primary"
+                sx={{ fontSize: '0.875rem', fontWeight: 'bold' }}
+              >
+                {panel.number}
+              </Typography>
+            </Box>
+          );
+        })()}
       </Box>
+    );
+  };
+
+  const renderPanelPolarity = (panel: Panel, x: number, y: number, width: number, height: number) => {
+    const isFlipped = panel.rotation === 180;
+    const leftSymbol = isFlipped ? '-' : '+';
+    const rightSymbol = isFlipped ? '+' : '-';
+
+    return (
+      <>
+        <text
+          x={x + width * 0.2}
+          y={y + height * 0.5}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="currentColor"
+          fontSize={12}
+        >
+          {leftSymbol}
+        </text>
+        <text
+          x={x + width * 0.8}
+          y={y + height * 0.5}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="currentColor"
+          fontSize={12}
+        >
+          {rightSymbol}
+        </text>
+      </>
     );
   };
 
@@ -232,6 +363,9 @@ export default function Grid({
           borderColor: isSelected ? 'primary.main' : 'grey.500',
           backgroundColor: isSelected ? 'primary.light' : 'grey.200',
           cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           '&:hover': {
             backgroundColor: isSelected ? 'primary.light' : 'grey.300',
           },
@@ -239,8 +373,20 @@ export default function Grid({
         onClick={(e) => {
           e.stopPropagation();
           setSelectedCombinerBox(box.id);
+          onCombinerBoxSelect?.(box.id);
         }}
-      />
+      >
+        <Typography 
+          variant="body2" 
+          color="text.primary"
+          sx={{ 
+            fontSize: '0.75rem',
+            fontWeight: 'bold'
+          }}
+        >
+          {box.number}
+        </Typography>
+      </Box>
     );
   };
 
@@ -266,8 +412,9 @@ export default function Grid({
     } else {
       const previewWidth = orientation === 'landscape' ? 4 : 2;
       const previewHeight = orientation === 'landscape' ? 2 : 4;
-      const isFlipped = false; // Preview always starts with default polarity
-
+      // Use the same spacing as placed panels
+      const leftSymbol = isPolarityFlipped ? '-' : '+';
+      const rightSymbol = isPolarityFlipped ? '+' : '-';
       return (
         <Box
           sx={{
@@ -280,17 +427,118 @@ export default function Grid({
             borderColor: 'primary.main',
             backgroundColor: 'rgba(25, 118, 210, 0.1)',
             pointerEvents: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 4px',
           }}
         >
-          <Typography variant="h6" color="primary.main">{isFlipped ? '-' : '+'}</Typography>
-          <Typography variant="h6" color="primary.main">{isFlipped ? '+' : '-'}</Typography>
+          {/* Polarity symbols, spaced like placed panels */}
+          <Typography
+            variant="h6"
+            color="primary.main"
+            sx={{
+              position: 'absolute',
+              left: '10%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }}
+          >
+            {leftSymbol}
+          </Typography>
+          <Typography
+            variant="h6"
+            color="primary.main"
+            sx={{
+              position: 'absolute',
+              left: '90%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }}
+          >
+            {rightSymbol}
+          </Typography>
+          {/* Faded numeric placeholder at the bottom */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: '4px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1,
+              pointerEvents: 'none',
+            }}
+          >
+            <Typography 
+              variant="body2" 
+              color="primary.main"
+              sx={{ fontSize: '0.875rem', fontWeight: 'bold', opacity: 0.3 }}
+            >
+              0
+            </Typography>
+          </Box>
         </Box>
       );
     }
+  };
+
+  const renderWirePaths = () => {
+    return strings.map((string, index) => {
+      const stringPanels = string.panels
+        .map(panelId => panels.find(p => p.id === panelId))
+        .filter((panel): panel is NonNullable<typeof panel> => panel !== undefined);
+
+      if (stringPanels.length === 0) return null;
+
+      const combinerBox = combinerBoxes.find(box => box.id === string.combinerBoxId);
+      if (!combinerBox) return null;
+
+      const firstPanel = stringPanels[0];
+      const lastPanel = stringPanels[stringPanels.length - 1];
+
+      // Calculate center positions
+      const combinerCenterX = combinerBox.x * CELL_SIZE;
+      const combinerCenterY = combinerBox.y * CELL_SIZE;
+
+      const firstPanelWidth = firstPanel.orientation === 'landscape' ? 4 : 2;
+      const firstPanelHeight = firstPanel.orientation === 'landscape' ? 2 : 4;
+      const firstPanelCenterX = firstPanel.x * CELL_SIZE + (firstPanelWidth * CELL_SIZE) / 2;
+      const firstPanelCenterY = firstPanel.y * CELL_SIZE + (firstPanelHeight * CELL_SIZE) / 2;
+
+      const lastPanelWidth = lastPanel.orientation === 'landscape' ? 4 : 2;
+      const lastPanelHeight = lastPanel.orientation === 'landscape' ? 2 : 4;
+      const lastPanelCenterX = lastPanel.x * CELL_SIZE + (lastPanelWidth * CELL_SIZE) / 2;
+      const lastPanelCenterY = lastPanel.y * CELL_SIZE + (lastPanelHeight * CELL_SIZE) / 2;
+
+      // Define colors for different strings
+      const colors = ['#4caf50', '#ff9800', '#f44336', '#2196f3'];
+      const color = colors[index % colors.length];
+
+      // Helper function to create a path that follows grid lines
+      const createGridPath = (startX: number, startY: number, endX: number, endY: number) => {
+        // First move horizontally, then vertically
+        return `M ${startX} ${startY} L ${endX} ${startY} L ${endX} ${endY}`;
+      };
+
+      return (
+        <g key={string.id}>
+          {/* Positive wire (first panel to combiner box) */}
+          <path
+            d={createGridPath(firstPanelCenterX, firstPanelCenterY, combinerCenterX, combinerCenterY)}
+            stroke={color}
+            strokeWidth={2}
+            strokeDasharray="4"
+            fill="none"
+          />
+          {/* Negative wire (last panel to combiner box) */}
+          <path
+            d={createGridPath(lastPanelCenterX, lastPanelCenterY, combinerCenterX, combinerCenterY)}
+            stroke={color}
+            strokeWidth={2}
+            strokeDasharray="4"
+            fill="none"
+          />
+        </g>
+      );
+    });
   };
 
   return (
@@ -311,6 +559,18 @@ export default function Grid({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
+      <svg
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+        }}
+      >
+        {renderWirePaths()}
+      </svg>
       {panels.map(renderPanel)}
       {showCombinerBoxes && combinerBoxes.map(renderCombinerBox)}
       {showPreview && renderPreview()}

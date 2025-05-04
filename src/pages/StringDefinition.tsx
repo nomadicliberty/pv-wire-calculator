@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -67,13 +67,22 @@ export default function StringDefinition() {
   };
 
   const handleCombinerBoxSelect = (boxId: string) => {
-    if (currentString.panels.length > 0) {
-      setCurrentString(prev => ({
-        ...prev,
-        combinerBoxId: boxId
-      }));
-    }
+    console.log('Combiner box selected:', boxId);
+    setCurrentString(prev => ({
+      ...prev,
+      combinerBoxId: boxId
+    }));
   };
+
+  // Add useEffect to monitor state changes
+  useEffect(() => {
+    console.log('Current string state:', {
+      panels: currentString.panels,
+      combinerBoxId: currentString.combinerBoxId,
+      panelCount: currentString.panels.length,
+      hasCombinerBox: !!currentString.combinerBoxId
+    });
+  }, [currentString]);
 
   const handleCreateString = () => {
     if (currentString.panels.length < 2) {
@@ -86,9 +95,9 @@ export default function StringDefinition() {
     }
 
     addString({
-      id: crypto.randomUUID(),
       panels: currentString.panels,
       combinerBoxId: currentString.combinerBoxId,
+      number: currentStringNumber,
       wirePath: {
         positive: [],
         negative: []
@@ -103,11 +112,13 @@ export default function StringDefinition() {
     setIsSelectingFirstPanel(true);
     setCurrentStringNumber(prev => prev + 1);
     setError('');
+    setSelectedCombinerBox(null); // Reset combiner box selection
   };
 
-  // Helper function to format panel IDs
-  const formatPanelId = (id: string) => {
-    return `P${id.slice(0, 4)}`;
+  // Helper function to get panel number
+  const getPanelNumber = (panelId: string) => {
+    const panel = panels.find(p => p.id === panelId);
+    return panel ? panel.number : '?';
   };
 
   const handleNext = () => {
@@ -124,12 +135,29 @@ export default function StringDefinition() {
         <Typography variant="h4">
           String Definition
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleNext}
-        >
-          Next: Wire Calculation
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/combiner-box')}
+            sx={{ 
+              borderColor: 'grey.400',
+              color: 'text.secondary',
+              '&:hover': {
+                borderColor: 'grey.600',
+                backgroundColor: 'action.hover'
+              }
+            }}
+          >
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleNext}
+            disabled={strings.length === 0}
+          >
+            Next: Wire Calculation
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -138,14 +166,14 @@ export default function StringDefinition() {
         </Alert>
       )}
 
-      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-        <Box sx={{ width: { xs: '100%', md: '33%' }, flexShrink: 0 }}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Stack spacing={2}>
-              <Typography variant="h6" gutterBottom>
+      <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
+        <Box sx={{ width: { xs: '100%', md: '30%' }, flexShrink: 0 }}>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle1" gutterBottom>
                 Instructions
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                 1. Click on the first panel of your string (this will be the positive end)
                 <br />
                 2. Click on subsequent panels in order to add them to the string
@@ -159,17 +187,17 @@ export default function StringDefinition() {
             </Stack>
           </Paper>
 
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
               String #{currentStringNumber}
             </Typography>
-            <List>
+            <List dense>
               <ListItem>
                 <ListItemText 
                   primary="Panels" 
                   secondary={
                     currentString.panels.length > 0 
-                      ? currentString.panels.map(formatPanelId).join(' → ')
+                      ? currentString.panels.map(getPanelNumber).join(' → ')
                       : 'No panels selected'
                   }
                 />
@@ -177,7 +205,7 @@ export default function StringDefinition() {
               <ListItem>
                 <ListItemText 
                   primary="Combiner Box" 
-                  secondary={currentString.combinerBoxId ? `Box ${currentString.combinerBoxId.slice(0, 4)}` : 'Not connected'}
+                  secondary={currentString.combinerBoxId ? 'Connected' : 'Not connected'}
                 />
               </ListItem>
             </List>
@@ -186,28 +214,29 @@ export default function StringDefinition() {
               fullWidth
               onClick={handleCreateString}
               disabled={currentString.panels.length < 2 || !currentString.combinerBoxId}
+              sx={{ mt: 1 }}
             >
               Create String #{currentStringNumber}
             </Button>
           </Paper>
 
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
               Defined Strings
             </Typography>
-            <List>
+            <List dense>
               {strings.map((string, index) => (
                 <ListItem
                   key={string.id}
                   secondaryAction={
-                    <IconButton edge="end" onClick={() => removeString(string.id)}>
-                      <DeleteIcon />
+                    <IconButton edge="end" size="small" onClick={() => removeString(string.id)}>
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   }
                 >
                   <ListItemText
                     primary={`String ${index + 1}`}
-                    secondary={`${string.panels.map(formatPanelId).join(' → ')} → Box ${string.combinerBoxId.slice(0, 4)}`}
+                    secondary={`Panel ${string.panels.map(getPanelNumber).join(' → ')} → Box ${string.combinerBoxId.slice(0, 4)}`}
                   />
                 </ListItem>
               ))}
@@ -215,16 +244,34 @@ export default function StringDefinition() {
           </Paper>
         </Box>
 
-        <Box sx={{ width: { xs: '100%', md: '67%' }, flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+        <Box sx={{ width: { xs: '100%', md: '70%' }, flexGrow: 1, minWidth: 0 }}>
+          <Paper sx={{ p: 2, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'auto' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: 'italic' }}>
               Not drawn to scale
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               {isSelectingFirstPanel 
                 ? 'Select the first panel of your string (this will be the positive end)'
                 : 'Select the next panel in your string or click "Create String" to finish'}
             </Typography>
+            <Box sx={{ mb: 2, display: 'flex', gap: 3, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: 20, 
+                  height: 0, 
+                  borderTop: '2px dashed #4caf50'
+                }} />
+                <Typography variant="caption">Positive Wire</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  width: 20, 
+                  height: 0, 
+                  borderTop: '2px dashed #f44336'
+                }} />
+                <Typography variant="caption">Negative Wire</Typography>
+              </Box>
+            </Box>
             <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'auto' }}>
               <GridComponent 
                 orientation="portrait"

@@ -11,6 +11,7 @@ import {
   Step,
   StepLabel,
 } from '@mui/material';
+import { useProjectStore } from '../store';
 
 const steps = [
   { label: 'Panel Placement', path: '/' },
@@ -26,7 +27,13 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const reset = useProjectStore(state => state.reset);
   const currentStep = steps.findIndex(step => step.path === location.pathname);
+
+  const handleNewProject = () => {
+    reset();
+    navigate('/');
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -35,7 +42,18 @@ export default function Layout({ children }: LayoutProps) {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             PV Wire Calculator
           </Typography>
-          <Button color="inherit" onClick={() => navigate('/')}>
+          <Button 
+            variant="contained" 
+            color="secondary"
+            onClick={handleNewProject}
+            sx={{
+              bgcolor: 'white',
+              color: 'primary.main',
+              '&:hover': {
+                bgcolor: 'grey.100'
+              }
+            }}
+          >
             New Project
           </Button>
         </Toolbar>

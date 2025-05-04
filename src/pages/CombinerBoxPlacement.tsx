@@ -75,9 +75,10 @@ export default function CombinerBoxPlacement() {
 
     setError('');
     addCombinerBox({
-      id: uuidv4(),
       x: snappedX,
       y: snappedY,
+      width: 1,
+      height: 1
     });
   };
 
@@ -95,13 +96,29 @@ export default function CombinerBoxPlacement() {
         <Typography variant="h4">
           Combiner Box Placement
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleNext}
-          disabled={combinerBoxes.length === 0}
-        >
-          Next: Define Strings
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/')}
+            sx={{ 
+              borderColor: 'grey.400',
+              color: 'text.secondary',
+              '&:hover': {
+                borderColor: 'grey.600',
+                backgroundColor: 'action.hover'
+              }
+            }}
+          >
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleNext}
+            disabled={combinerBoxes.length === 0}
+          >
+            Next: String Definition
+          </Button>
+        </Box>
       </Box>
 
       {error && (
