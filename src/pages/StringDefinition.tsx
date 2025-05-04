@@ -225,27 +225,30 @@ export default function StringDefinition() {
               Defined Strings
             </Typography>
             <List dense>
-              {strings.map((string, index) => (
-                <ListItem
-                  key={string.id}
-                  secondaryAction={
-                    <IconButton edge="end" size="small" onClick={() => removeString(string.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  }
-                >
-                  <ListItemText
-                    primary={`String ${index + 1}`}
-                    secondary={`Panel ${string.panels.map(getPanelNumber).join(' → ')} → Box ${string.combinerBoxId.slice(0, 4)}`}
-                  />
-                </ListItem>
-              ))}
+              {strings.map((string, index) => {
+                const combinerBox = combinerBoxes.find(box => box.id === string.combinerBoxId);
+                return (
+                  <ListItem
+                    key={string.id}
+                    secondaryAction={
+                      <IconButton edge="end" size="small" onClick={() => removeString(string.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemText
+                      primary={`String ${index + 1}`}
+                      secondary={`Panel ${string.panels.map(getPanelNumber).join(' → ')} → Combiner #${combinerBox ? combinerBox.number : '?'}`}
+                    />
+                  </ListItem>
+                );
+              })}
             </List>
           </Paper>
         </Box>
 
-        <Box sx={{ width: { xs: '100%', md: '70%' }, flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 2, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'auto' }}>
+        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
+          <Paper sx={{ p: 2, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: 'italic' }}>
               Not drawn to scale
             </Typography>
@@ -272,7 +275,7 @@ export default function StringDefinition() {
                 <Typography variant="caption">Negative Wire</Typography>
               </Box>
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
               <GridComponent 
                 orientation="portrait"
                 showPreview={false}
@@ -281,6 +284,7 @@ export default function StringDefinition() {
                 onPanelSelect={handlePanelSelect}
                 onCombinerBoxSelect={handleCombinerBoxSelect}
                 selectedPanels={selectedPanels}
+                strings={strings}
               />
             </Box>
           </Paper>

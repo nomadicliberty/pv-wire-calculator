@@ -20,21 +20,55 @@ import { useState } from 'react';
 import { useProjectStore } from '../store';
 import GridComponent from '../components/Grid';
 
-const CELL_SIZE = 20; // pixels, should match Grid component
+const CELL_SIZE = 25; // pixels, should match Grid component
 
 export default function WireCalculation() {
   const navigate = useNavigate();
-  const { strings, panels, combinerBoxes, saveProject } = useProjectStore();
+  const { strings, panels, combinerBoxes, saveProject, measurementSystem, panelWidth, panelLength, panelSpacing, rowSpacing } = useProjectStore();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectNameError, setProjectNameError] = useState('');
 
-  const calculateDistance = (x1: number, y1: number, x2: number, y2: number) => {
-    // Calculate Manhattan distance (grid-based path)
-    const horizontalDistance = Math.abs(x2 - x1);
-    const verticalDistance = Math.abs(y2 - y1);
-    return horizontalDistance + verticalDistance;
+  // Helper to convert metric to inches if needed
+  const toInches = (value: number) => measurementSystem === 'metric' ? value / 2.54 : value;
+
+  // Get real-world panel and gap sizes in inches
+  const realPanelWidth = toInches(Number(panelWidth) || 0);
+  const realPanelLength = toInches(Number(panelLength) || 0);
+  const realPanelGap = toInches(Number(panelSpacing) || 0);
+  const realRowGap = toInches(Number(rowSpacing) || 0);
+
+  // Calculate real-world position of a panel terminal (match grid logic and use polarity)
+  const getPanelTerminalPosition = (panel: any, side: 'left' | 'right' | 'top' | 'bottom') => {
+    const width = toInches(Number(panel.width));
+    const length = toInches(Number(panel.length));
+    let x = panel.x;
+    let y = panel.y;
+    if (side === 'left') {
+      x = panel.x;
+      y = panel.y + length / 2;
+    } else if (side === 'right') {
+      x = panel.x + width;
+      y = panel.y + length / 2;
+    } else if (side === 'top') {
+      x = panel.x + width / 2;
+      y = panel.y;
+    } else if (side === 'bottom') {
+      x = panel.x + width / 2;
+      y = panel.y + length;
+    }
+    return { x, y };
   };
+
+  // Combiner box bottom center in inches
+  const getCombinerBoxPosition = (box: any) => {
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height;
+    return { x, y };
+  };
+
+  // Manhattan distance in inches, vertical first then horizontal
+  const manhattanVH = (x1: number, y1: number, x2: number, y2: number) => Math.abs(y2 - y1) + Math.abs(x2 - x1);
 
   const calculateWireLength = (stringId: string) => {
     const string = strings.find(s => s.id === stringId);
@@ -51,28 +85,21 @@ export default function WireCalculation() {
     const combinerBox = combinerBoxes.find(box => box.id === string.combinerBoxId);
     if (!combinerBox) return { positive: "0 ft", negative: "0 ft", total: "0 ft" };
 
-    // Calculate positive wire length (from first panel to combiner box)
+    // Positive wire: from positive terminal of first panel to combiner box
     const firstPanel = stringPanels[0];
-    const positiveLength = calculateDistance(
-      firstPanel.x,
-      firstPanel.y,
-      combinerBox.x,
-      combinerBox.y
-    );
+    const firstPanelPos = getPanelTerminalPosition(firstPanel, firstPanel.polarity.positive);
+    const combinerPos = getCombinerBoxPosition(combinerBox);
+    const positiveLength = manhattanVH(firstPanelPos.x, firstPanelPos.y, combinerPos.x, combinerPos.y);
 
-    // Calculate negative wire length (from last panel to combiner box)
+    // Negative wire: from negative terminal of last panel to combiner box
     const lastPanel = stringPanels[stringPanels.length - 1];
-    const negativeLength = calculateDistance(
-      lastPanel.x,
-      lastPanel.y,
-      combinerBox.x,
-      combinerBox.y
-    );
+    const lastPanelPos = getPanelTerminalPosition(lastPanel, lastPanel.polarity.negative);
+    const negativeLength = manhattanVH(lastPanelPos.x, lastPanelPos.y, combinerPos.x, combinerPos.y);
 
-    // Convert to feet (assuming each grid cell is 6 inches)
-    const positiveFeet = (positiveLength * 0.5).toFixed(1);
-    const negativeFeet = (negativeLength * 0.5).toFixed(1);
-    const totalFeet = ((positiveLength + negativeLength) * 0.5).toFixed(1);
+    // Convert to feet (1 foot = 12 inches)
+    const positiveFeet = (positiveLength / 12).toFixed(2);
+    const negativeFeet = (negativeLength / 12).toFixed(2);
+    const totalFeet = ((positiveLength + negativeLength) / 12).toFixed(2);
 
     return {
       positive: `${positiveFeet} ft`,
@@ -176,26 +203,16 @@ export default function WireCalculation() {
                 const combinerBox = combinerBoxes.find(b => b.id === string.combinerBoxId);
                 if (!combinerBox) return null;
 
-                const positiveWireLength = calculateDistance(
-                  stringPanels[0].x,
-                  stringPanels[0].y,
-                  combinerBox.x,
-                  combinerBox.y
-                );
-                const negativeWireLength = calculateDistance(
-                  stringPanels[stringPanels.length - 1].x,
-                  stringPanels[stringPanels.length - 1].y,
-                  combinerBox.x,
-                  combinerBox.y
-                );
-                const totalWireLength = positiveWireLength + negativeWireLength;
+                const positiveWireLength = calculateWireLength(string.id).positive;
+                const negativeWireLength = calculateWireLength(string.id).negative;
+                const totalWireLength = calculateWireLength(string.id).total;
 
                 return (
                   <TableRow key={string.id}>
                     <TableCell>String {string.number}</TableCell>
-                    <TableCell>{positiveWireLength.toFixed(1)} ft</TableCell>
-                    <TableCell>{negativeWireLength.toFixed(1)} ft</TableCell>
-                    <TableCell>{totalWireLength.toFixed(1)} ft</TableCell>
+                    <TableCell>{positiveWireLength}</TableCell>
+                    <TableCell>{negativeWireLength}</TableCell>
+                    <TableCell>{totalWireLength}</TableCell>
                   </TableRow>
                 );
               })}
@@ -214,8 +231,6 @@ export default function WireCalculation() {
           showCombinerBoxes={true}
           placementMode={false}
           panelOutlineColor="grey.300"
-          showStrings={true}
-          showWirePaths={true}
         />
       </Paper>
     </Box>

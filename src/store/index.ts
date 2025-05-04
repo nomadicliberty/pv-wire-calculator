@@ -10,6 +10,10 @@ interface ProjectState {
   selectedCombinerBox: string | null;
   nextPanelNumber: number;
   nextCombinerBoxNumber: number;
+  panelWidth: string;
+  panelLength: string;
+  panelSpacing: string;
+  rowSpacing: string;
   addPanel: (panel: Omit<Panel, 'id' | 'number'>) => void;
   updatePanel: (id: string, updates: Partial<Panel>) => void;
   removePanel: (id: string) => void;
@@ -23,6 +27,10 @@ interface ProjectState {
   reset: () => void;
   saveProject: (projectName: string) => void;
   loadProject: () => Promise<void>;
+  setPanelWidth: (width: string) => void;
+  setPanelLength: (length: string) => void;
+  setPanelSpacing: (spacing: string) => void;
+  setRowSpacing: (spacing: string) => void;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -34,17 +42,27 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   selectedCombinerBox: null,
   nextPanelNumber: 1,
   nextCombinerBoxNumber: 1,
+  panelWidth: '',
+  panelLength: '',
+  panelSpacing: '0.5',
+  rowSpacing: '0.5',
 
   addPanel: (panel) => set((state) => ({
     panels: [...state.panels, { ...panel, id: crypto.randomUUID(), number: state.nextPanelNumber }],
     nextPanelNumber: state.nextPanelNumber + 1
   })),
 
-  updatePanel: (id, updates) => set((state) => ({
-    panels: state.panels.map(panel =>
-      panel.id === id ? { ...panel, ...updates } : panel
-    )
-  })),
+  updatePanel: (id, updates) => set((state) => {
+    const updatedPanels = state.panels.map(panel => {
+      if (panel.id === id) {
+        const newPanel = { ...panel, ...updates };
+        console.log('updatePanel:', { id, oldPanel: panel, updates, newPanel });
+        return newPanel;
+      }
+      return panel;
+    });
+    return { panels: updatedPanels };
+  }),
 
   removePanel: (id) => set((state) => ({
     panels: state.panels.filter(panel => panel.id !== id)
@@ -79,7 +97,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     selectedPanel: null,
     selectedCombinerBox: null,
     nextPanelNumber: 1,
-    nextCombinerBoxNumber: 1
+    nextCombinerBoxNumber: 1,
+    panelWidth: '',
+    panelLength: '',
+    panelSpacing: '0.5',
+    rowSpacing: '0.5'
   }),
 
   saveProject: (projectName: string) => {
@@ -91,7 +113,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       combinerBoxes: state.combinerBoxes,
       strings: state.strings,
       nextPanelNumber: state.nextPanelNumber,
-      nextCombinerBoxNumber: state.nextCombinerBoxNumber
+      nextCombinerBoxNumber: state.nextCombinerBoxNumber,
+      panelWidth: state.panelWidth,
+      panelLength: state.panelLength,
+      panelSpacing: state.panelSpacing,
+      rowSpacing: state.rowSpacing
     };
 
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
@@ -131,7 +157,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
               nextPanelNumber: projectData.nextPanelNumber,
               nextCombinerBoxNumber: projectData.nextCombinerBoxNumber,
               selectedPanel: null,
-              selectedCombinerBox: null
+              selectedCombinerBox: null,
+              panelWidth: projectData.panelWidth,
+              panelLength: projectData.panelLength,
+              panelSpacing: projectData.panelSpacing,
+              rowSpacing: projectData.rowSpacing
             });
             resolve();
           } catch (error) {
@@ -144,5 +174,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
       input.click();
     });
-  }
+  },
+
+  setPanelWidth: (width) => set({ panelWidth: width }),
+  setPanelLength: (length) => set({ panelLength: length }),
+  setPanelSpacing: (spacing) => set({ panelSpacing: spacing }),
+  setRowSpacing: (spacing) => set({ rowSpacing: spacing })
 })); 

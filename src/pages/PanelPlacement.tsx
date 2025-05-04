@@ -33,7 +33,7 @@ import { Panel } from '../types';
 
 export default function PanelPlacement() {
   const navigate = useNavigate();
-  const { 
+  const {
     measurementSystem, 
     setMeasurementSystem,
     panels,
@@ -43,15 +43,19 @@ export default function PanelPlacement() {
     selectedPanel,
     setSelectedPanel,
     loadProject,
+    setPanelWidth,
+    setPanelLength,
+    setPanelSpacing,
+    setRowSpacing,
+    panelWidth,
+    panelLength,
+    panelSpacing,
+    rowSpacing
   } = useProjectStore();
   
-  const [panelWidth, setPanelWidth] = useState('');
-  const [panelLength, setPanelLength] = useState('');
   const [error, setError] = useState('');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [mode, setMode] = useState<'place' | 'select'>('place');
-  const [rowSpacing, setRowSpacing] = useState(0.5);
-  const [panelSpacing, setPanelSpacing] = useState(0.5);
   const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLElement | null>(null);
   const [isPolarityFlipped, setIsPolarityFlipped] = useState(false);
 
@@ -62,12 +66,12 @@ export default function PanelPlacement() {
       setPanelLength('');
       setOrientation('portrait');
       setMode('place');
-      setRowSpacing(0.5);
-      setPanelSpacing(0.5);
+      setRowSpacing('0.5');
+      setPanelSpacing('0.5');
       setIsPolarityFlipped(false);
       setError('');
     }
-  }, [panels]);
+  }, [panels, setPanelWidth, setPanelLength, setRowSpacing, setPanelSpacing]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,15 +86,17 @@ export default function PanelPlacement() {
   }, [selectedPanel, removePanel, setSelectedPanel]);
 
   const handleGridClick = (panel: Panel) => {
-    // Calculate initial polarity based on orientation and rotation
-    const polarity = {
-      positive: 'left' as const,
-      negative: 'right' as const
+    // Set rotation and polarity based on isPolarityFlipped
+    const polarityMap = {
+      0: { positive: 'left' as const, negative: 'right' as const },
+      180: { positive: 'right' as const, negative: 'left' as const }
     };
+    const rotation = isPolarityFlipped ? 180 : 0;
+    const polarity = polarityMap[rotation as 0 | 180];
 
     addPanel({
       ...panel,
-      rotation: isPolarityFlipped ? 180 : 0,
+      rotation,
       polarity
     });
   };
@@ -158,29 +164,37 @@ export default function PanelPlacement() {
     }
 
     if (selectedPanel) {
-      const newPolarityState = !isPolarityFlipped;
-      setIsPolarityFlipped(newPolarityState);
-      
-      // Calculate new polarity based on current rotation
-      const polarityMap = {
-        0: { positive: 'right' as const, negative: 'left' as const },
-        90: { positive: 'bottom' as const, negative: 'top' as const },
-        180: { positive: 'left' as const, negative: 'right' as const },
-        270: { positive: 'top' as const, negative: 'bottom' as const }
-      };
-
       const panel = panels.find(p => p.id === selectedPanel);
       if (!panel) return;
-
+      // Toggle between 0 and 180 rotation, just like in place mode
+      const newRotation = panel.rotation === 180 ? 0 : 180;
+      const polarityMap = {
+        0: { positive: 'left' as const, negative: 'right' as const },
+        180: { positive: 'right' as const, negative: 'left' as const }
+      };
+      const newPolarity = polarityMap[newRotation as 0 | 180];
       updatePanel(selectedPanel, {
-        rotation: newPolarityState ? 180 : 0,
-        polarity: polarityMap[panel.rotation as keyof typeof polarityMap]
+        rotation: newRotation as 0 | 180,
+        polarity: newPolarity
       });
+      setSelectedPanel(null); // Force deselect
+      setTimeout(() => setSelectedPanel(selectedPanel), 0); // Force reselect after update
     }
   };
 
   // Get the current polarity state
   const getCurrentPolarity = () => {
+    if (mode === 'select' && selectedPanel) {
+      const panel = panels.find(p => p.id === selectedPanel);
+      if (panel && panel.polarity) {
+        // Only handle portrait for now (left/right)
+        return {
+          left: panel.polarity.positive === 'left' ? '+' : '-',
+          right: panel.polarity.positive === 'right' ? '+' : '-'
+        };
+      }
+    }
+    // Place mode or no panel selected
     return {
       left: isPolarityFlipped ? '-' : '+',
       right: isPolarityFlipped ? '+' : '-'
@@ -445,10 +459,8 @@ export default function PanelPlacement() {
                     label={`Row (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
                     value={rowSpacing}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (!isNaN(value) && value >= 0) {
-                        setRowSpacing(value);
-                      }
+                      const value = e.target.value;
+                      setRowSpacing(value);
                     }}
                     type="number"
                     inputProps={{ min: 0, step: 0.1 }}
@@ -459,10 +471,8 @@ export default function PanelPlacement() {
                     label={`Panel (${measurementSystem === 'imperial' ? 'in' : 'mm'})`}
                     value={panelSpacing}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (!isNaN(value) && value >= 0) {
-                        setPanelSpacing(value);
-                      }
+                      const value = e.target.value;
+                      setPanelSpacing(value);
                     }}
                     type="number"
                     inputProps={{ min: 0, step: 0.1 }}
@@ -476,11 +486,7 @@ export default function PanelPlacement() {
                 </Typography>
                 <Stack spacing={1}>
                   <Typography variant="body2" color="text.secondary">
-                    {mode === 'select' 
-                      ? (selectedPanel 
-                        ? 'Click the button to flip panel polarity' 
-                        : 'Select a panel to adjust')
-                      : 'Click the button to rotate the panel 180°'}
+                    {'Click the button to rotate the panel 180°'}
                   </Typography>
                   <Stack direction="row" spacing={1}>
                     <IconButton 
@@ -523,15 +529,15 @@ export default function PanelPlacement() {
           </Paper>
         </Box>
 
-        <Box sx={{ width: { xs: '100%', md: '67%' }, flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'auto' }}>
+        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
+          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
               Not drawn to scale
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Note: Each grid cell represents 6" spacing. When panels or rows are placed with gaps, the calculator will add the appropriate spacing for wire length calculations.
+              Note: Each grid cell represents 12" spacing. When panels or rows are placed with gaps, the calculator will add the appropriate spacing for wire length calculations.
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
               <GridComponent 
                 orientation={orientation}
                 showPreview={true}
@@ -539,6 +545,8 @@ export default function PanelPlacement() {
                 onPanelPlace={handleGridClick}
                 placementMode={mode === 'place' && panelWidth !== '' && panelLength !== ''}
                 isPolarityFlipped={isPolarityFlipped}
+                onPanelSelect={panel => setSelectedPanel(panel.id)}
+                selectedPanels={selectedPanel ? new Set([selectedPanel]) : new Set()}
               />
             </Box>
           </Paper>

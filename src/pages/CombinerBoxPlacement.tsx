@@ -149,15 +149,15 @@ export default function CombinerBoxPlacement() {
           </Paper>
         </Box>
 
-        <Box sx={{ width: { xs: '100%', md: '67%' }, flexGrow: 1, minWidth: 0 }}>
-          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'auto' }}>
+        <Box sx={{ width: '100vw', flexGrow: 1, minWidth: 0 }}>
+          <Paper sx={{ p: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100vw', height: '80vh', overflow: 'auto' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
               Not drawn to scale
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Note: Each grid cell represents 6" spacing. Combiner boxes will snap to half-grid increments (3").
+              Note: Each grid cell represents 12" spacing. Combiner boxes will snap to half-grid increments (6").
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100vw', height: '100%', overflow: 'auto' }}>
               <GridComponent 
                 orientation="portrait"
                 showPreview={true}
