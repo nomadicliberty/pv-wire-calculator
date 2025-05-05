@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,8 +9,10 @@ import {
   Stack,
 } from '@mui/material';
 import { useProjectStore } from '../store';
-import { v4 as uuidv4 } from 'uuid';
 import GridComponent from '../components/Grid';
+import { getSpacedPosition } from '../utils/panelSpacing';
+
+
 
 export default function CombinerBoxPlacement() {
   const navigate = useNavigate();
@@ -160,15 +162,18 @@ export default function CombinerBoxPlacement() {
               </Typography>
             </Box>
             <Box sx={{ flexGrow: 1, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
-              <GridComponent 
-                orientation="portrait"
-                showPreview={true}
-                showCombinerBoxes={true}
-                placementMode={true}
-                onCombinerBoxPlace={(box) => {
-                  addCombinerBox(box);
-                }}
-              />
+            <GridComponent 
+  orientation="portrait"
+  showPreview={true}
+  showCombinerBoxes={true}
+  placementMode={true}
+  applySpacing={true}
+  panels={panels} // ✅ Pass panels into GridComponent
+  onCombinerBoxPlace={(box) => {
+    addCombinerBox(box);
+  }}
+/>
+
             </Box>
           </Paper>
         </Box>

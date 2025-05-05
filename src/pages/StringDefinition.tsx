@@ -11,12 +11,12 @@ import {
   ListItem,
   ListItemText,
   IconButton,
-  Divider,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import GridComponent from '../components/Grid';
 import { useProjectStore } from '../store';
 import { Panel, String } from '../types';
+import Divider from '@mui/material/Divider';
 
 export default function StringDefinition() {
   const navigate = useNavigate();
@@ -265,7 +265,7 @@ export default function StringDefinition() {
                   <Box sx={{ 
                     width: 20, 
                     height: 0, 
-                    borderTop: '2px dashed #4caf50'
+                    borderTop: '2px dashed #f44336'
                   }} />
                   <Typography variant="caption">Positive Wire</Typography>
                 </Box>
@@ -273,7 +273,7 @@ export default function StringDefinition() {
                   <Box sx={{ 
                     width: 20, 
                     height: 0, 
-                    borderTop: '2px dashed #f44336'
+                    borderTop: '2px dashed #222'
                   }} />
                   <Typography variant="caption">Negative Wire</Typography>
                 </Box>
@@ -284,6 +284,8 @@ export default function StringDefinition() {
                 orientation="portrait"
                 showPreview={false}
                 showCombinerBoxes={true}
+                applySpacing={true}
+                panels={panels}
                 placementMode={false}
                 onPanelSelect={handlePanelSelect}
                 onCombinerBoxSelect={handleCombinerBoxSelect}

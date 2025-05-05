@@ -11,25 +11,17 @@ import {
   IconButton,
   Stack,
   Alert,
-  Slider,
-  FormControl,
-  FormLabel,
   ToggleButton,
   ToggleButtonGroup,
-  Divider,
-  Tooltip,
   Popover,
 } from '@mui/material';
 import { useProjectStore } from '../store';
 import GridComponent from '../components/Grid';
-import { v4 as uuidv4 } from 'uuid';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import FlipIcon from '@mui/icons-material/Flip';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import { Panel } from '../types';
+import { applyPanelSpacing } from '../utils/panelSpacing';
 
 export default function PanelPlacement() {
   const navigate = useNavigate();
@@ -52,6 +44,8 @@ export default function PanelPlacement() {
     panelSpacing,
     rowSpacing
   } = useProjectStore();
+  const nextPanelNumber = useProjectStore(state => state.nextPanelNumber);
+
   
   const [error, setError] = useState('');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
@@ -85,7 +79,7 @@ export default function PanelPlacement() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPanel, removePanel, setSelectedPanel]);
 
-  const handleGridClick = (panel: Panel) => {
+  const handleGridClick = (gridPosition) => { // Rename the argument to be more descriptive
     // Set rotation and polarity based on isPolarityFlipped
     const polarityMap = {
       0: { positive: 'left' as const, negative: 'right' as const },
@@ -95,9 +89,13 @@ export default function PanelPlacement() {
     const polarity = polarityMap[rotation as 0 | 180];
 
     addPanel({
-      ...panel,
-      rotation,
-      polarity
+      x: gridPosition.x, // Use the x from the grid click
+      y: gridPosition.y, // Use the y from the grid click
+      orientation: orientation, // Use the current orientation from state
+      width: Number(panelWidth), // Use the current width from state (ensure it's a number)
+      length: Number(panelLength), // Use the current length from state (ensure it's a number)
+      rotation: rotation,
+      polarity: polarity
     });
   };
 
@@ -222,6 +220,7 @@ export default function PanelPlacement() {
     }
     navigate('/combiner-box');
   };
+  
 
   const handleInfoOpen = (event: React.MouseEvent<HTMLElement>) => {
     setInfoAnchorEl(event.currentTarget);
@@ -540,16 +539,20 @@ export default function PanelPlacement() {
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 0, minWidth: 0, p: 0, overflow: 'hidden' }}>
-            <GridComponent 
-              orientation={orientation}
-              showPreview={true}
-              showCombinerBoxes={false}
-              onPanelPlace={handleGridClick}
-              placementMode={mode === 'place' && panelWidth !== '' && panelLength !== ''}
-              isPolarityFlipped={isPolarityFlipped}
-              onPanelSelect={panel => setSelectedPanel(panel.id)}
-              selectedPanels={selectedPanel ? new Set([selectedPanel]) : new Set()}
-            />
+          <GridComponent
+  orientation={orientation}
+  showPreview={true}
+  showCombinerBoxes={false}
+  applySpacing={false}
+  onPanelPlace={(panel) => {
+    addPanel({ ...panel, number: nextPanelNumber });
+  }}
+  placementMode={mode === 'place' && panelWidth !== '' && panelLength !== ''}
+  isPolarityFlipped={isPolarityFlipped}
+  onPanelSelect={panel => setSelectedPanel(panel.id)}
+  selectedPanels={selectedPanel ? new Set([selectedPanel]) : new Set()}
+/>
+
           </Box>
         </Paper>
       </Box>

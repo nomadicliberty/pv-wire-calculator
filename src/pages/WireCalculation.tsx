@@ -228,9 +228,11 @@ export default function WireCalculation() {
         <GridComponent 
           orientation="portrait"
           showPreview={false}
+          applySpacing={true}
+          panels={panels}
           showCombinerBoxes={true}
           placementMode={false}
-          panelOutlineColor="grey.300"
+          strings={strings}
         />
       </Paper>
     </Box>

@@ -14,7 +14,9 @@ interface ProjectState {
   panelLength: string;
   panelSpacing: string;
   rowSpacing: string;
-  addPanel: (panel: Omit<Panel, 'id' | 'number'>) => void;
+  pixelsPerInch: number; // ✅ Add pixelsPerInch to the state
+  setPixelsPerInch: (value: number) => void; // ✅ Add setter function
+  addPanel: (panel: Panel) => void;
   updatePanel: (id: string, updates: Partial<Panel>) => void;
   removePanel: (id: string) => void;
   addCombinerBox: (box: Omit<CombinerBox, 'id' | 'number'>) => void;
@@ -46,11 +48,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   panelLength: '',
   panelSpacing: '0.5',
   rowSpacing: '0.5',
+  pixelsPerInch: 25 / 12, // ✅ Initialize pixelsPerInch here
+  setPixelsPerInch: (value) => set({ pixelsPerInch: value }), // ✅ Implement the setter
 
   addPanel: (panel) => set((state) => ({
-    panels: [...state.panels, { ...panel, id: crypto.randomUUID(), number: state.nextPanelNumber }],
+    panels: [...state.panels, panel],
     nextPanelNumber: state.nextPanelNumber + 1
   })),
+  
 
   updatePanel: (id, updates) => set((state) => {
     const updatedPanels = state.panels.map(panel => {
@@ -88,7 +93,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setSelectedPanel: (id) => set({ selectedPanel: id }),
   setSelectedCombinerBox: (id) => set({ selectedCombinerBox: id }),
   setMeasurementSystem: (system) => set({ measurementSystem: system }),
-  
+
   reset: () => set({
     measurementSystem: 'imperial',
     panels: [],
@@ -101,7 +106,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     panelWidth: '',
     panelLength: '',
     panelSpacing: '0.5',
-    rowSpacing: '0.5'
+    rowSpacing: '0.5',
+    pixelsPerInch: 25 / 12, // ✅ Reset pixelsPerInch as well
   }),
 
   saveProject: (projectName: string) => {
@@ -117,7 +123,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       panelWidth: state.panelWidth,
       panelLength: state.panelLength,
       panelSpacing: state.panelSpacing,
-      rowSpacing: state.rowSpacing
+      rowSpacing: state.rowSpacing,
+      pixelsPerInch: state.pixelsPerInch, // ✅ Save pixelsPerInch
     };
 
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
@@ -137,7 +144,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      
+
       input.onchange = (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) {
@@ -161,7 +168,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
               panelWidth: projectData.panelWidth,
               panelLength: projectData.panelLength,
               panelSpacing: projectData.panelSpacing,
-              rowSpacing: projectData.rowSpacing
+              rowSpacing: projectData.rowSpacing,
+              pixelsPerInch: projectData.pixelsPerInch, // ✅ Load pixelsPerInch
             });
             resolve();
           } catch (error) {
@@ -179,5 +187,5 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setPanelWidth: (width) => set({ panelWidth: width }),
   setPanelLength: (length) => set({ panelLength: length }),
   setPanelSpacing: (spacing) => set({ panelSpacing: spacing }),
-  setRowSpacing: (spacing) => set({ rowSpacing: spacing })
-})); 
+  setRowSpacing: (spacing) => set({ rowSpacing: spacing }),
+}));
